@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+scapy
+python-nmap
+requests
+psycopg2-binary
+pydantic
+pydantic-settings

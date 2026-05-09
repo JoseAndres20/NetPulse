@@ -1,0 +1,67 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: netpulse-db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: netpulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - netpulse-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d netpulse"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  scanner:
+    build: ./scanner
+    container_name: netpulse-scanner
+    network_mode: host
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./scanner:/app
+    environment:
+      - SCANNER_PORT=8000
+      - DEBUG=True
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    build: ./backend
+    container_name: netpulse-backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/netpulse
+      SCANNER_URL: http://host.docker.internal:8000
+    ports:
+      - "3001:3001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - netpulse-net
+
+  frontend:
+    build: ./frontend
+    container_name: netpulse-frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    networks:
+      - netpulse-net
+
+networks:
+  netpulse-net:
+    driver: bridge
