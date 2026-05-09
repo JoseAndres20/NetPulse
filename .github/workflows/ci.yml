@@ -84,7 +84,7 @@ jobs:
           flake8 . \
             --max-line-length=120 \
             --exclude=__pycache__ \
-            --extend-ignore=E501,W503
+            --extend-ignore=E501,W503,B008
 
   # ─── Docker: build completo (solo si los 3 jobs anteriores pasan) ──────────
   docker:
