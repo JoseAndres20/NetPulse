@@ -3,18 +3,20 @@ services:
     image: postgres:15-alpine
     container_name: netpulse-db
     restart: always
+    mem_limit: 512m
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: netpulse
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:Z
     networks:
       - netpulse-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d netpulse"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,16 +24,18 @@ services:
   scanner:
     build: ./scanner
     container_name: netpulse-scanner
+    restart: always
+    mem_limit: 256m
     network_mode: host
     privileged: true
     cap_add:
       - NET_ADMIN
       - NET_RAW
-    volumes:
-      - ./scanner:/app
     environment:
-      - SCANNER_PORT=8000
-      - DEBUG=True
+      - SCANNER_PORT=${SCANNER_PORT}
+      - BACKEND_URL=${BACKEND_URL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}
+      - DEBUG=${DEBUG}
     depends_on:
       db:
         condition: service_healthy
@@ -40,13 +44,13 @@ services:
     build: ./backend
     container_name: netpulse-backend
     restart: always
+    mem_limit: 512m
     environment:
-      DATABASE_URL: postgresql://user:password@db:5432/netpulse
-      SCANNER_URL: http://host.docker.internal:8000
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      SCANNER_URL: http://localhost:${SCANNER_PORT}
+      CORS_ORIGIN: ${CORS_ORIGIN}
     ports:
       - "3001:3001"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       db:
         condition: service_healthy
@@ -57,6 +61,9 @@ services:
     build: ./frontend
     container_name: netpulse-frontend
     restart: always
+    mem_limit: 256m
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
     ports:
       - "5173:5173"
     networks:
@@ -65,3 +72,6 @@ services:
 networks:
   netpulse-net:
     driver: bridge
+
+volumes:
+  postgres-data:

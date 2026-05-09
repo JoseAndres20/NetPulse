@@ -1,16 +1,25 @@
-.PHONY: up down restart logs ps shell-scanner shell-backend shell-frontend shell-db build urls
+.PHONY: up down restart logs ps shell-scanner shell-backend shell-frontend shell-db build urls tables
+
+# Cargar variables del .env
+include .env
+export
 
 # Ver los accesos directos de los servicios
 urls:
 	@echo " "
 	@echo "🚀 NetPulse Audit Stack - Accesos Rápidos"
 	@echo "----------------------------------------"
-	@echo "🌐 Frontend:   http://localhost:5173"
-	@echo "⚙️  Backend:    http://localhost:3001"
-	@echo "🐍 Scanner API: http://localhost:8000"
-	@echo "📑 API Docs:    http://localhost:8000/docs"
+	@echo "🌐 Frontend:    http://localhost:5173"
+	@echo "⚙️  Backend:     http://localhost:3001"
+	@echo "🐍 Scanner API: http://localhost:$(SCANNER_PORT)"
+	@echo "📑 API Docs:    http://localhost:$(SCANNER_PORT)/docs"
+	@echo "🗄️  Base datos:  postgresql://$(POSTGRES_USER):***@localhost:5432/$(POSTGRES_DB)"
 	@echo "----------------------------------------"
 	@echo " "
+
+# Ver las tablas de la base de datos
+tables:
+	docker exec -it netpulse-db psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\dt"
 
 # Levantar todos los servicios
 up:
@@ -23,6 +32,10 @@ down:
 # Reiniciar y reconstruir todo
 restart:
 	docker compose down
+	docker compose up -d --build db
+	@echo "⏳ Esperando a que la base de datos esté lista..."
+	@until docker exec netpulse-db pg_isready -U $(POSTGRES_USER) -d $(POSTGRES_DB) > /dev/null 2>&1; do sleep 1; done
+	@echo "✅ Base de datos lista. Levantando el resto..."
 	docker compose up -d --build
 
 # Ver logs en tiempo real
@@ -49,4 +62,4 @@ shell-frontend:
 	docker exec -it netpulse-frontend sh
 
 shell-db:
-	docker exec -it netpulse-db psql -U user -d netpulse
+	docker exec -it netpulse-db psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)

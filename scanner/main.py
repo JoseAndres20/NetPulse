@@ -5,18 +5,19 @@ from typing import List, Optional
 import nmap
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from scapy.all import ARP, Ether, srp
+
 
 # --- Configuration ---
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")
+
     APP_NAME: str = "NetPulse Scanner"
     DEBUG: bool = False
     DEFAULT_SCAN_TIMEOUT: int = 3
     SCANNER_PORT: int = 8000
-    
-    class Config:
-        env_file = ".env"
+
 
 settings = Settings()
 
@@ -27,6 +28,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 # --- Models ---
 class Device(BaseModel):
     ip: str = Field(..., example="192.168.1.1")
@@ -35,16 +37,19 @@ class Device(BaseModel):
     vendor: Optional[str] = "Unknown"
     status: str = "online"
 
+
 class ScanResponse(BaseModel):
     network_range: str
     device_count: int
     devices: List[Device]
+
 
 # --- Core Logic ---
 class NetworkScanner:
     """
     Professional Network Discovery Service using Scapy and Nmap.
     """
+
     def __init__(self):
         try:
             self.nm = nmap.PortScanner()
@@ -57,7 +62,6 @@ class NetworkScanner:
         """Determines the local network range in CIDR notation."""
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             try:
-                # Target an external IP to find local gateway route
                 s.connect(("8.8.8.8", 80))
                 local_ip = s.getsockname()[0]
                 return ".".join(local_ip.split(".")[:-1]) + ".0/24"
@@ -68,11 +72,11 @@ class NetworkScanner:
     def scan(self, network_range: str) -> List[Device]:
         """Performs an ARP scan followed by Nmap enrichment."""
         logger.info(f"Initiating discovery on {network_range}")
-        
+
         # 1. ARP Discovery
         arp_request = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst=network_range)
         ans, _ = srp(arp_request, timeout=settings.DEFAULT_SCAN_TIMEOUT, verbose=False)
-        
+
         discovered_devices = []
         for _, received in ans:
             device_data = Device(
@@ -85,7 +89,7 @@ class NetworkScanner:
         if self.nm:
             for device in discovered_devices:
                 try:
-                    self.nm.scan(device.ip, arguments="-sn") # Ping scan for hostname
+                    self.nm.scan(device.ip, arguments="-sn")  # Ping scan for hostname
                     if device.ip in self.nm.all_hosts():
                         device.hostname = self.nm[device.ip].hostname()
                 except Exception as e:
@@ -93,13 +97,16 @@ class NetworkScanner:
 
         return discovered_devices
 
+
 # --- API Endpoints ---
 app = FastAPI(title=settings.APP_NAME)
 scanner = NetworkScanner()
 
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": settings.APP_NAME}
+
 
 @app.get("/scan", response_model=ScanResponse)
 async def run_scan(
@@ -111,7 +118,7 @@ async def run_scan(
     try:
         network_to_scan = target or scanner.get_local_network()
         devices = scanner.scan(network_to_scan)
-        
+
         return ScanResponse(
             network_range=network_to_scan,
             device_count=len(devices),
@@ -120,6 +127,7 @@ async def run_scan(
     except Exception as e:
         logger.error(f"Scan operation failed: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during network scan")
+
 
 if __name__ == "__main__":
     import uvicorn
