@@ -1,4 +1,18 @@
+@import "tailwindcss";
+
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@theme {
+  --color-bg-main: #0a0a0c;
+  --color-bg-surface: #121214;
+  --color-bg-hover: #1c1c1f;
+  --color-primary: #3b82f6;
+  --color-text-main: #f4f4f5;
+  --color-text-dim: #a1a1aa;
+  --color-border: #27272a;
+  
+  --font-sans: 'Outfit', sans-serif;
+}
 
 :root {
   --bg-main: #0a0a0c;
