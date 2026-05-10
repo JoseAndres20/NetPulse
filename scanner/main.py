@@ -77,7 +77,7 @@ class NetworkScanner:
                 try:
                     # Usamos run_in_executor para no bloquear el loop asíncrono
                     loop = asyncio.get_event_loop()
-                    await loop.run_in_executor(None, lambda: self.nm.scan(device.ip, arguments="-sn"))
+                    await loop.run_in_executor(None, lambda ip=device.ip: self.nm.scan(ip, arguments="-sn"))
                     if device.ip in self.nm.all_hosts():
                         device.hostname = self.nm[device.ip].hostname()
                 except Exception as e:
