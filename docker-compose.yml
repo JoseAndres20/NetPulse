@@ -54,7 +54,6 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       SCANNER_URL: http://scanner:${SCANNER_PORT:-8000}
       CORS_ORIGIN: ${CORS_ORIGIN}
-      API_KEY: ${API_KEY:-dev-api-key-change-in-production}
     depends_on:
       db:
         condition: service_healthy
