@@ -63,3 +63,12 @@ shell-frontend:
 
 shell-db:
 	docker exec -it netpulse-db psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
+
+db-shell:
+	docker compose exec db psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
+
+# Ejecuta el CI localmente
+.PHONY: ci
+ci:
+	@chmod +x scripts/local-ci.sh
+	@./scripts/local-ci.sh
