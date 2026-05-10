@@ -1,11 +1,14 @@
 import { scansRepository } from './scans.repository'
 import { devicesService } from '../devices/devices.service'
+import { portsService } from '../ports/ports.service'
 
 export const scansService = {
-  startStream: async (target: string | null) => {
-    const scannerUrl = `${process.env.SCANNER_URL || 'http://localhost:8000'}/scan/stream${target ? `?target=${target}` : ''}`
-    
-    const response = await fetch(scannerUrl)
+  startStream: async (target: string | null, scanType: string = 'ping') => {
+    const scannerUrl = new URL(`${process.env.SCANNER_URL || 'http://localhost:8000'}/scan/stream`)
+    if (target) scannerUrl.searchParams.append('target', target)
+    scannerUrl.searchParams.append('scan_type', scanType)
+
+    const response = await fetch(scannerUrl.toString())
     if (!response.ok) throw new Error('Scanner service unreachable')
 
     // Registrar inicio del escaneo en DB
@@ -29,9 +32,15 @@ export const scansService = {
             const lines = chunk.split('\n')
 
             for (const line of lines) {
+              if (line.startsWith(':')) {
+                // Reenviar keepalives o comentarios al frontend para evitar timeout
+                controller.enqueue(encoder.encode(`${line}\n\n`))
+                continue
+              }
+
               if (line.startsWith('data: ')) {
                 const dataStr = line.replace('data: ', '').trim()
-                
+
                 if (dataStr === '[DONE]') {
                   // Finalizar registro en DB
                   await scansRepository.updateStatus(scanRecord.id, 'completed', foundCount)
@@ -42,13 +51,20 @@ export const scansService = {
                 try {
                   const deviceData = JSON.parse(dataStr)
                   foundCount++
-                  
+
                   // Persistir dispositivo
-                  devicesService.upsertFromScan(deviceData).catch(e => console.error(e))
+                  devicesService.upsertFromScan(deviceData)
+                    .then(async (device) => {
+                      await scansRepository.linkDeviceToScan(scanRecord.id, device.id)
+                      if (deviceData.ports && deviceData.ports.length > 0) {
+                        await portsService.upsertDevicePorts(device.id, scanRecord.id, deviceData.ports)
+                      }
+                    })
+                    .catch(() => { })
 
                   // Enviar al stream
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify(deviceData)}\n\n`))
-                } catch {}
+                } catch { }
               }
             }
           }

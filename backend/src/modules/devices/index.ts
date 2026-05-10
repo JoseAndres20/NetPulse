@@ -2,4 +2,3 @@
 export type { Device }           from './types'
 export { devicesRepository }     from './devices.repository'
 export { devicesService }        from './devices.service'
-export { devicesController }     from './devices.controller'

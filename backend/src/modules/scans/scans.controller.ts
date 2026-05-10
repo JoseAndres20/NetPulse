@@ -7,8 +7,9 @@ export const scansController = {
     try {
       const { searchParams } = new URL(req.url)
       const target = searchParams.get('target')
+      const scanType = searchParams.get('scan_type') || 'ping'
       
-      const stream = await scansService.startStream(target)
+      const stream = await scansService.startStream(target, scanType)
 
       return new NextResponse(stream, {
         headers: {
@@ -26,6 +27,17 @@ export const scansController = {
     try {
       const scans = await scansService.getAllScans()
       return NextResponse.json({ data: scans })
+    } catch (error) {
+      return handleError(error)
+    }
+  },
+
+  getScanDevices: async (req: NextRequest, id: string): Promise<NextResponse> => {
+    try {
+      // Direct pass-through to repo since it's a simple query
+      const { scansRepository } = await import('./scans.repository')
+      const devices = await scansRepository.getDevicesByScan(id)
+      return NextResponse.json({ data: devices })
     } catch (error) {
       return handleError(error)
     }

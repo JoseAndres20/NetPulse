@@ -20,10 +20,51 @@ export const scansRepository = {
   },
 
   // Get all scans
-  findAll: async (): Promise<Scan[]> => {
-    const result = await pool.query<Scan>(
-      'SELECT id, target, status, devices_found as "devicesFound", started_at as "startedAt", finished_at as "finishedAt" FROM scans ORDER BY started_at DESC'
-    )
+  findAll: async () => {
+    const result = await pool.query('SELECT * FROM scans ORDER BY started_at DESC')
+    return result.rows.map(row => ({
+      id: row.id,
+      target: row.target,
+      scanType: row.scan_type,
+      status: row.status,
+      devicesFound: row.devices_found,
+      startedAt: row.started_at,
+      finishedAt: row.finished_at,
+      errorMsg: row.error_msg
+    }))
+  },
+
+  linkDeviceToScan: async (scanId: string, deviceId: string) => {
+    const query = `
+      INSERT INTO scan_devices (scan_id, device_id) 
+      VALUES ($1, $2) 
+      ON CONFLICT DO NOTHING
+    `
+    await pool.query(query, [scanId, deviceId])
+  },
+
+  getDevicesByScan: async (scanId: string) => {
+    const query = `
+      SELECT d.*, 
+             COALESCE(
+               json_agg(
+                 json_build_object(
+                   'port', p.port, 
+                   'protocol', p.protocol, 
+                   'state', p.state, 
+                   'service', p.service, 
+                   'version', p.version
+                 )
+               ) FILTER (WHERE p.port IS NOT NULL), '[]'
+             ) as ports
+      FROM devices d
+      JOIN scan_devices sd ON d.id = sd.device_id
+      LEFT JOIN ports p ON d.id = p.device_id AND p.scan_id = $1
+      WHERE sd.scan_id = $1
+      GROUP BY d.id
+      ORDER BY d.ip ASC
+    `
+    const result = await pool.query(query, [scanId])
     return result.rows
   }
 }

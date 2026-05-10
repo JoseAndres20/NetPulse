@@ -35,7 +35,7 @@ cd ..
 echo -e "--- 🎨 Validando FRONTEND ---"
 cd frontend
 echo "Ejecutando TypeScript Check..."
-npx tsc --noEmit
+npx tsc -b
 check_status "Frontend TypeScript"
 
 echo "Ejecutando ESLint..."

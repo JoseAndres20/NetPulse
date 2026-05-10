@@ -29,6 +29,13 @@ CREATE TABLE IF NOT EXISTS scans (
     error_msg     TEXT
 );
 
+-- scan_devices (Historial relacional)
+CREATE TABLE IF NOT EXISTS scan_devices (
+    scan_id UUID REFERENCES scans(id) ON DELETE CASCADE,
+    device_id UUID REFERENCES devices(id) ON DELETE CASCADE,
+    PRIMARY KEY (scan_id, device_id)
+);
+
 -- ports
 CREATE TABLE IF NOT EXISTS ports (
     id          SERIAL PRIMARY KEY,
@@ -83,21 +90,3 @@ CREATE INDEX IF NOT EXISTS idx_vulns_device_id   ON vulnerabilities (device_id);
 CREATE INDEX IF NOT EXISTS idx_vulns_severity    ON vulnerabilities (severity);
 CREATE INDEX IF NOT EXISTS idx_scans_status      ON scans (status);
 
--- seed
-INSERT INTO devices (ip, mac, hostname, vendor, os, status, is_gateway) VALUES
-    ('192.168.1.1',  'A4:C3:F0:01:23:45', 'gateway.local', 'TP-Link',   'Linux',   'online',  TRUE),
-    ('192.168.1.10', 'B8:27:EB:AA:BB:CC', 'laptop-dev',    'Apple',     'macOS',   'online',  FALSE),
-    ('192.168.1.20', 'DC:A6:32:11:22:33', 'raspi-server',  'Raspberry', 'Linux',   'online',  FALSE),
-    ('192.168.1.50', '00:0C:29:FF:EE:DD', 'vm-windows',    'VMware',    'Windows', 'offline', FALSE)
-ON CONFLICT (ip) DO NOTHING;
-
-INSERT INTO scans (target, scan_type, status, devices_found, finished_at) VALUES
-    ('192.168.1.0/24', 'ping', 'completed', 4, NOW()),
-    ('192.168.1.0/24', 'full', 'completed', 4, NOW())
-ON CONFLICT DO NOTHING;
-
-INSERT INTO alerts (device_id, severity, type, title, description)
-SELECT id, 'info', 'new_device', 'Nuevo dispositivo detectado',
-       'Se detectó ' || hostname || ' (' || ip || ') por primera vez en la red.'
-FROM devices
-ON CONFLICT DO NOTHING;
