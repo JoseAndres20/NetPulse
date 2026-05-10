@@ -1,15 +1,17 @@
-import { useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback } from 'react'
 import type { Device } from '../types'
 
-interface UseScanStreamReturn {
+interface ScanContextType {
   devices: Device[]
   isScanning: boolean
   error: string | null
-  startScan: () => void
+  startScan: (scanType?: 'ping' | 'full') => void
   stopScan: () => void
 }
 
-export function useScanStream(): UseScanStreamReturn {
+const ScanContext = createContext<ScanContextType | undefined>(undefined)
+
+export const ScanProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [devices, setDevices] = useState<Device[]>([])
   const [isScanning, setIsScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -23,7 +25,7 @@ export function useScanStream(): UseScanStreamReturn {
     setIsScanning(false)
   }, [eventSource])
 
-  const startScan = useCallback(() => {
+  const startScan = useCallback((scanType: 'ping' | 'full' = 'full') => {
     // Prevent multiple concurrent scans
     if (isScanning) return
 
@@ -32,7 +34,7 @@ export function useScanStream(): UseScanStreamReturn {
     setError(null)
 
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-    const source = new EventSource(`${apiUrl}/api/scans/stream`)
+    const source = new EventSource(`${apiUrl}/api/scans/stream?scan_type=${scanType}`)
     setEventSource(source)
 
     source.onmessage = (event) => {
@@ -56,10 +58,22 @@ export function useScanStream(): UseScanStreamReturn {
     source.onerror = () => {
       source.close() // Cerrar explícitamente en caso de error real
       setIsScanning(false)
-      // Solo lanzamos el error si no recibimos el [DONE] antes
       setError('Connection to scanner lost or server is unreachable.')
     }
   }, [isScanning])
 
-  return { devices, isScanning, error, startScan, stopScan }
+  return (
+    <ScanContext.Provider value={{ devices, isScanning, error, startScan, stopScan }}>
+      {children}
+    </ScanContext.Provider>
+  )
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const useScanContext = () => {
+  const context = useContext(ScanContext)
+  if (context === undefined) {
+    throw new Error('useScanContext must be used within a ScanProvider')
+  }
+  return context
 }
