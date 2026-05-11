@@ -1,75 +1,83 @@
 # 📡 NetPulse Audit Stack
+> **Plataforma Full-Stack de Auditoría de Red y Ciberseguridad Defensiva.**
 
-Plataforma profesional de descubrimiento de red y auditoría de dispositivos en tiempo real, diseñada bajo una arquitectura de microservicios contenerizada.
+NetPulse es una solución profesional diseñada para la visibilidad total de infraestructuras de red locales. Utiliza una arquitectura de microservicios contenerizada para ofrecer escaneo táctico de puertos, descubrimiento de dispositivos en tiempo real y análisis de topología interactivo.
 
-## 📸 Preview
+---
 
-### Network Discovery — Dark Mode
-> Escanea rangos de red en tiempo real. Los dispositivos aparecen al instante conforme son detectados.
+## 🚀 Funcionalidades Destacadas
 
-![Network Discovery — Dark Mode](docs/images/devices.png)
+### 🛡️ Rogue Device Detection
+NetPulse ahora incluye inteligencia comparativa. El sistema detecta automáticamente si un dispositivo es nuevo en la red comparándolo con escaneos históricos, resaltando posibles intrusos con alertas visuales dinámicas tanto en la tabla como en el mapa de topología.
 
-### Scan History — Dark Mode
-> Historial completo de escaneos con dispositivos encontrados, timestamps y estado.
+### 🕸️ Mapa de Topología Interactivo
+Visualización de nodos basada en **ReactFlow**. Permite ver el Gateway y los dispositivos orbitando con conexiones animadas, permitiendo una comprensión inmediata de la jerarquía de la infraestructura.
 
-![Scan History — Dark Mode](docs/images/scans.png)
+### ⚡ Streaming de Datos con SSE
+Descubrimiento de red ultra-rápido mediante **Server-Sent Events (SSE)**. Los dispositivos y sus puertos abiertos aparecen en el dashboard al instante conforme son detectados por el motor táctico.
 
-### Scan History — Light Mode
-> Interfaz adaptable con soporte de tema claro para entornos de trabajo diurnos.
+### 🌓 Diseño Premium & UX
+Interfaz moderna y responsiva con soporte nativo para **Dark/Light Mode**, diseñada para maximizar la legibilidad de datos técnicos complejos.
 
-![Scan History — Light Mode](docs/images/theme.png)
+---
+
+## 📸 Vista Previa del Sistema
 
 ### Network Topology — Interactive Map
 > Visualiza la infraestructura de red de forma gráfica. Arrastra nodos, haz zoom y analiza las conexiones entre el Gateway y los dispositivos detectados.
 
-![Network Topology — Interactive Map](docs/images/topology.png)
+![Network Topology — Interactive Modal](docs/images/topologia.png)
 
-![Network Topology — Complex View](docs/images/topology2.png)
+### Rogue Device Alerts — Security Focus
+> Identifica instantáneamente cambios en la red. Los nuevos dispositivos se resaltan en rojo con alertas visuales animadas.
 
----
-
-## 🏗️ Arquitectura del Sistema
-
-![NetPulse Architecture Diagram](docs/images/architecture.png)
-
-### Componentes:
-1.  **Scanner (Python/FastAPI):** El motor táctico. Utiliza `Nmap` con ejecución asíncrona (`asyncio`) y privilegios de red (`host mode`) para el descubrimiento profundo de dispositivos y puertos en toda la subred.
-2.  **Backend (Next.js 16+):** El orquestador de APIs. Gestiona la lógica de negocio, las rutas de red y las consultas de alto rendimiento a la base de datos usando SQL puro mediante el driver `pg`.
-3.  **Frontend (React/Vite):** El dashboard visual. Una interfaz moderna y reactiva que utiliza **ReactFlow** para la topología y Context API para el estado global.
-4.  **Database (PostgreSQL):** Almacenamiento persistente relacional de dispositivos, puertos, y la traza histórica exacta de escaneos.
+![Network Topology — Scan History Page](docs/images/topologia2.png)
 
 ---
 
-## 🚀 Características Principales
+## 🏗️ Arquitectura Técnica
 
-- **Streaming en Vivo:** Resultados instantáneos mediante Server-Sent Events (SSE).
-- **Mapa de Topología:** Visualización interactiva de nodos y conexiones (ReactFlow).
-- **Historial Relacional:** Traza completa de escaneos y dispositivos en PostgreSQL.
-- **Arquitectura de Microservicios:** Separación clara entre Scanner, Backend y Frontend.
-- **CI/CD Local:** Validación automatizada de tipos, linting y tests unitarios.
+NetPulse se divide en cuatro servicios core totalmente aislados y orquestados mediante **Docker Compose**:
+
+1.  **Scanner API (Python 3.11 / FastAPI):**
+    *   Motor táctico basado en `Nmap` y `Scapy`.
+    *   Ejecución asíncrona (`asyncio`) para escaneos paralelos de alto rendimiento.
+    *   Streaming de eventos en tiempo real.
+2.  **Core Backend (Next.js 16+ / App Router):**
+    *   Orquestador de APIs y persistencia relacional.
+    *   Lógica de comparación histórica para detección de intrusos.
+    *   Consultas SQL optimizadas mediante `pg`.
+3.  **Real-Time Frontend (React / Vite):**
+    *   Dashboard reactivo construido con **Tailwind CSS v4**.
+    *   Visualización de grafos avanzada con `ReactFlow`.
+    *   Gestión de estado global mediante Context API.
+4.  **Database (PostgreSQL):**
+    *   Almacenamiento persistente de dispositivos, puertos y trazas históricas.
 
 ---
 
-## 🛠️ Stack Tecnológico
+## 🧪 Calidad de Software y CI/CD
 
-| Componente | Tecnología |
-| :--- | :--- |
-| **Scanner** | Docker, Python 3.11, FastAPI, Nmap, asyncio |
-| **Backend** | Docker, Node.js, Next.js (App Router API), TypeScript, pg |
-| **Frontend** | React 19, Vite, Tailwind CSS v4, **ReactFlow**, Lucide React |
-| **Infraestructura** | Docker Compose, Makefile, CI/CD Local (`make ci`) |
-| **Base de Datos** | Docker, PostgreSQL 15 (Alpine) |
+El proyecto mantiene un estándar de calidad riguroso mediante una pipeline de **Integración Continua (CI)** local:
+
+*   **Scanner:** 31 tests unitarios (Pytest) + Validación de estilo (Flake8).
+*   **Backend:** 34 tests unitarios (Vitest) + TypeScript Check + ESLint.
+*   **Frontend:** 34 tests unitarios (Vitest) + TypeScript Check + ESLint.
+
+Para validar el estado de todo el proyecto, simplemente ejecuta:
+```bash
+make ci
+```
 
 ---
 
-## 🚦 Guía de Inicio Rápido
+## 🚦 Guía de Instalación Rápida
 
 ### Prerrequisitos
 - Docker & Docker Compose
-- Nmap instalado en el host (opcional, el contenedor lo incluye)
-- Permisos de red (el scanner usa `network_mode: host`)
+- Makefile
 
-### Instalación
+### Lanzamiento
 1. Clonar el repositorio:
    ```bash
    git clone https://github.com/JoseAndres20/NetPulse.git
@@ -78,21 +86,14 @@ Plataforma profesional de descubrimiento de red y auditoría de dispositivos en 
 2. Configurar variables de entorno:
    ```bash
    cp .env.example .env
-   # Edita .env con tus credenciales
    ```
-3. Levantar los servicios:
+3. Levantar el stack:
    ```bash
    make up
    ```
 4. Acceder al dashboard:
    - Frontend: [http://localhost](http://localhost)
-   - Backend API: [http://localhost:3001](http://localhost:3001)
-
-### CI/CD Local
-Para asegurar la calidad del código antes de un commit, ejecuta:
-```bash
-make ci
-```
+   - API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
