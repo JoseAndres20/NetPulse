@@ -29,9 +29,9 @@ export const ScanDetailModal: React.FC<ScanDetailModalProps> = ({ scan, devices,
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {devices.map((device) => (
             <div key={device.ip} style={{ 
-              backgroundColor: 'var(--bg-main)', 
-              border: device.is_new ? '1px solid #ef4444' : '1px solid var(--border)',
-              boxShadow: device.is_new ? '0 0 10px rgba(239, 68, 68, 0.15)' : 'none',
+              backgroundColor: device.is_new ? 'rgba(239, 68, 68, 0.05)' : 'var(--bg-main)', 
+              border: device.is_new ? '1.5px solid #ef4444' : '1px solid var(--border)',
+              boxShadow: device.is_new ? '0 0 15px rgba(239, 68, 68, 0.2)' : 'none',
               borderRadius: '8px',
               padding: '1rem',
               position: 'relative'
@@ -39,10 +39,14 @@ export const ScanDetailModal: React.FC<ScanDetailModalProps> = ({ scan, devices,
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <Server size={18} color={device.is_new ? '#ef4444' : 'var(--primary)'} />
-                  <span style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-main)' }}>{device.ip}</span>
+                  <span style={{ 
+                    fontSize: '1.1rem', 
+                    fontWeight: 600, 
+                    color: device.is_new ? '#ef4444' : 'var(--text-main)' 
+                  }}>{device.ip}</span>
                   <span style={{ color: 'var(--text-dim)' }}>{device.mac}</span>
                   {device.is_new && (
-                    <span className="alert-badge">NEW</span>
+                    <span className="alert-badge" style={{ backgroundColor: '#ef4444', color: 'white' }}>ALERTA: NUEVO</span>
                   )}
                 </div>
                 <Badge 

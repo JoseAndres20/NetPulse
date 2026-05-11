@@ -165,16 +165,33 @@ export const scansService = {
     }
 
     const previousDevices = (await scansRepository.getDevicesByScan(previousScan.id)) as Device[]
-    const previousMacs = new Set(previousDevices.map((d: Device) => d.mac).filter(Boolean))
-    const previousIps = new Set(previousDevices.map((d: Device) => d.ip))
+    
+    // Create sets for fast lookup
+    const previousMacs = new Set(
+      previousDevices
+        .map((d: Device) => d.mac?.toLowerCase())
+        .filter(Boolean)
+    )
+    const previousIps = new Set(
+      previousDevices.map((d: Device) => d.ip)
+    )
 
     return currentDevices.map((d: Device) => {
+      const currentMac = d.mac?.toLowerCase()
+      const currentIp = d.ip
+
       // A device is new if its MAC wasn't in the previous scan.
       // If MAC is missing, fallback to IP comparison.
-      const isMacNew = d.mac ? !previousMacs.has(d.mac) : !previousIps.has(d.ip)
+      let isNew = false
+      if (currentMac) {
+        isNew = !previousMacs.has(currentMac)
+      } else {
+        isNew = !previousIps.has(currentIp)
+      }
+
       return {
         ...d,
-        is_new: isMacNew
+        is_new: isNew
       }
     })
   }
