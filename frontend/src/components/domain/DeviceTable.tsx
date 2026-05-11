@@ -24,13 +24,25 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, isScanning })
           </thead>
           <tbody>
             {devices.map((device) => (
-              <tr key={device.ip} className="new-row">
-                <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{device.ip}</td>
+              <tr 
+                key={device.ip} 
+                className={`new-row ${device.is_new ? 'rogue-device' : ''}`}
+                style={device.is_new ? { backgroundColor: 'rgba(239, 68, 68, 0.05)' } : {}}
+              >
+                <td style={{ fontWeight: 600, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {device.ip}
+                  {device.is_new && (
+                    <span className="alert-badge">NEW</span>
+                  )}
+                </td>
                 <td style={{ fontFamily: 'monospace', color: 'var(--text-dim)' }}>{device.mac}</td>
                 <td>{device.hostname || <span style={{ color: 'var(--text-dim)', opacity: 0.7 }}>Unknown</span>}</td>
                 <td>{device.vendor}</td>
                 <td>
-                  <Badge status={device.status} isOnline={device.status === 'online'} />
+                  <Badge 
+                    status={device.is_new ? 'alert' : device.status} 
+                    isOnline={device.status === 'online'} 
+                  />
                 </td>
               </tr>
             ))}

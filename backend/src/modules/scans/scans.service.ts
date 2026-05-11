@@ -1,5 +1,6 @@
 import { scansRepository } from './scans.repository'
 import { devicesService } from '../devices/devices.service'
+import type { Device } from '../devices/types'
 import { portsService } from '../ports/ports.service'
 import { logger } from '@/lib/logger'
 
@@ -121,5 +122,36 @@ export const scansService = {
   /** Deletes a scan record and its associated device links by ID. */
   deleteScan: async (id: string) => {
     return scansRepository.delete(id)
+  },
+
+  /**
+   * Retrieves devices for a scan and compares them with the previous scan
+   * to mark which ones are newly discovered.
+   */
+  getDevicesByScanWithComparison: async (scanId: string) => {
+    const currentScan = await scansRepository.findById(scanId)
+    if (!currentScan) throw new Error('Scan not found')
+
+    const currentDevices = await scansRepository.getDevicesByScan(scanId)
+    const previousScan = await scansRepository.findPreviousScan(currentScan.target, scanId)
+
+    if (!previousScan) {
+      // If no previous scan, all devices are considered "known" (or new, but no comparison base)
+      return currentDevices.map((d: Device) => ({ ...d, is_new: false }))
+    }
+
+    const previousDevices = (await scansRepository.getDevicesByScan(previousScan.id)) as Device[]
+    const previousMacs = new Set(previousDevices.map((d: Device) => d.mac).filter(Boolean))
+    const previousIps = new Set(previousDevices.map((d: Device) => d.ip))
+
+    return currentDevices.map((d: Device) => {
+      // A device is new if its MAC wasn't in the previous scan.
+      // If MAC is missing, fallback to IP comparison.
+      const isMacNew = d.mac ? !previousMacs.has(d.mac) : !previousIps.has(d.ip)
+      return {
+        ...d,
+        is_new: isMacNew
+      }
+    })
   }
 }

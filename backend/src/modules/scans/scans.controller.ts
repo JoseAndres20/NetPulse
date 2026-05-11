@@ -32,11 +32,9 @@ export const scansController = {
     }
   },
 
-  getScanDevices: async (req: NextRequest, id: string): Promise<NextResponse> => {
+  getScanDevices: async (_req: NextRequest, id: string): Promise<NextResponse> => {
     try {
-      // Direct pass-through to repo since it's a simple query
-      const { scansRepository } = await import('./scans.repository')
-      const devices = await scansRepository.getDevicesByScan(id)
+      const devices = await scansService.getDevicesByScanWithComparison(id)
       return NextResponse.json({ data: devices })
     } catch (error) {
       return handleError(error)

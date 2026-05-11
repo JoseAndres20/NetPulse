@@ -7,11 +7,14 @@ export interface Port {
 }
 
 export interface Device {
+  id: string
   ip: string
   mac: string
   hostname?: string
   vendor?: string
   status: string
+  is_gateway?: boolean
+  is_new?: boolean
   ports?: Port[]
 }
 
