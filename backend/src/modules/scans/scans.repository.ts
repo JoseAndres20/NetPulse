@@ -3,10 +3,10 @@ import { Scan } from './types'
 
 export const scansRepository = {
   // Create a new scan record
-  create: async (target: string): Promise<Scan> => {
+  create: async (target: string, scanType: string = 'ping'): Promise<Scan> => {
     const result = await pool.query<Scan>(
-      'INSERT INTO scans (target, status) VALUES ($1, $2) RETURNING id, started_at as "startedAt", status, target',
-      [target, 'running']
+      'INSERT INTO scans (target, scan_type, status) VALUES ($1, $2, $3) RETURNING id, started_at as "startedAt", status, target, scan_type as "scanType"',
+      [target, scanType, 'running']
     )
     return result.rows[0]
   },
@@ -66,5 +66,10 @@ export const scansRepository = {
     `
     const result = await pool.query(query, [scanId])
     return result.rows
+  },
+
+  delete: async (id: string): Promise<boolean> => {
+    const result = await pool.query('DELETE FROM scans WHERE id = $1', [id])
+    return (result.rowCount ?? 0) > 0
   }
 }

@@ -16,6 +16,18 @@ export class AppError extends Error {
     return new AppError(message, 400)
   }
 
+  static unauthorized(message = 'Unauthorized'): AppError {
+    return new AppError(message, 401)
+  }
+
+  static forbidden(message = 'Forbidden'): AppError {
+    return new AppError(message, 403)
+  }
+
+  static rateLimit(message = 'Rate limit exceeded'): AppError {
+    return new AppError(message, 429)
+  }
+
   static internal(message = 'Internal server error'): AppError {
     return new AppError(message, 500)
   }
