@@ -11,10 +11,12 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:Z
+    ports:
+      - "5432:5432"
     networks:
       - netpulse-net
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,16 +26,14 @@ services:
     container_name: netpulse-scanner
     restart: always
     mem_limit: 256m
-    networks:
-      - netpulse-net
+    network_mode: host
     privileged: true
     cap_add:
       - NET_ADMIN
       - NET_RAW
     environment:
-      - SCANNER_PORT=${SCANNER_PORT}
-      - BACKEND_URL=http://backend:3001
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - SCANNER_PORT=${SCANNER_PORT:-8000}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}
       - DEBUG=${DEBUG}
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -49,24 +49,29 @@ services:
     networks:
       - netpulse-net
     ports:
-      - "3001:3001"
+      - "3001:3000"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      SCANNER_URL: http://scanner:${SCANNER_PORT:-8000}
-      CORS_ORIGIN: ${CORS_ORIGIN}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - SCANNER_URL=http://host.docker.internal:${SCANNER_PORT:-8000}
+      - CORS_ORIGIN=http://localhost
+      - API_KEY=${API_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       db:
         condition: service_healthy
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:3001
+        VITE_API_KEY: ${API_KEY}
     container_name: netpulse-frontend
     restart: always
     mem_limit: 256m
-    environment:
-      - VITE_API_URL=http://localhost:3001
     ports:
-      - "5173:5173"
+      - "80:80"
     networks:
       - netpulse-net
     depends_on:
