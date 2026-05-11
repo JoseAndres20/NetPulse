@@ -30,17 +30,25 @@ export const ScanDetailModal: React.FC<ScanDetailModalProps> = ({ scan, devices,
           {devices.map((device) => (
             <div key={device.ip} style={{ 
               backgroundColor: 'var(--bg-main)', 
-              border: '1px solid var(--border)',
+              border: device.is_new ? '1px solid #ef4444' : '1px solid var(--border)',
+              boxShadow: device.is_new ? '0 0 10px rgba(239, 68, 68, 0.15)' : 'none',
               borderRadius: '8px',
-              padding: '1rem'
+              padding: '1rem',
+              position: 'relative'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <Server size={18} color="var(--primary)" />
+                  <Server size={18} color={device.is_new ? '#ef4444' : 'var(--primary)'} />
                   <span style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-main)' }}>{device.ip}</span>
                   <span style={{ color: 'var(--text-dim)' }}>{device.mac}</span>
+                  {device.is_new && (
+                    <span className="alert-badge">NEW</span>
+                  )}
                 </div>
-                <Badge status={device.status} isOnline={device.status === 'online'} />
+                <Badge 
+                  status={device.is_new ? 'alert' : device.status} 
+                  isOnline={device.status === 'online'} 
+                />
               </div>
               
               {device.hostname && (
