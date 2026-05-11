@@ -52,9 +52,21 @@ export const TopologyModal: React.FC<TopologyModalProps> = ({ scan, onClose }) =
           </div>
         ) : devices.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-dim)', marginBottom: '0.5rem' }}>
-              💡 <b>Tip:</b> Drag nodes to rearrange. The center node is the <b>Gateway</b>.
-            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>
+                💡 <b>Tip:</b> Drag nodes to rearrange. The center node is the <b>Gateway</b>.
+              </p>
+              <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', background: 'var(--bg-surface)', padding: '4px 12px', borderRadius: '20px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)' }}></div>
+                  <span>Known</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 5px #ef4444' }}></div>
+                  <span style={{ color: '#ef4444', fontWeight: 'bold' }}>New/Unknown (Alert)</span>
+                </div>
+              </div>
+            </div>
             <NetworkMap devices={devices} />
           </div>
         ) : (
