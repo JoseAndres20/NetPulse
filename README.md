@@ -2,6 +2,23 @@
 
 **NetPulse Audit Stack** es una plataforma profesional de monitoreo y descubrimiento de redes locales en tiempo real. Diseñada bajo una arquitectura de microservicios contenida en Docker, permite identificar dispositivos, auditar puertos y visualizar el estado de la red de forma eficiente y segura.
 
+## 📸 Preview
+
+### Network Discovery — Dark Mode
+> Escanea rangos de red en tiempo real. Los dispositivos aparecen al instante conforme son detectados.
+
+![Network Discovery — Dark Mode](docs/images/devices.png)
+
+### Scan History — Dark Mode
+> Historial completo de escaneos con dispositivos encontrados, timestamps y estado.
+
+![Scan History — Dark Mode](docs/images/scans.png)
+
+### Scan History — Light Mode
+> Interfaz adaptable con soporte de tema claro para entornos de trabajo diurnos.
+
+![Scan History — Light Mode](docs/images/theme.png)
+
 ---
 
 ## 🏗️ Arquitectura del Sistema
