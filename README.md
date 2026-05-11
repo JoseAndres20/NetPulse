@@ -23,16 +23,7 @@
 
 ## 🏗️ Arquitectura del Sistema
 
-El proyecto se divide en 4 contenedores especializados que colaboran entre sí:
-
-```mermaid
-graph TD
-    User((Usuario)) --> |Accede| Frontend[Frontend - React/Vite]
-    Frontend --> |Server-Sent Events| Backend[Backend - Next.js]
-    Backend --> |Orquestación Asíncrona| Scanner[Scanner - Python/FastAPI]
-    Backend --> |Persistencia Relacional| DB[(PostgreSQL)]
-    Scanner --> |Nmap Subnet Scan| LAN((Red Local))
-```
+![NetPulse Architecture Diagram](docs/images/architecture.png)
 
 ### Componentes:
 1.  **Scanner (Python/FastAPI):** El motor táctico. Utiliza `Nmap` con ejecución asíncrona (`asyncio`) y privilegios de red (`host mode`) para el descubrimiento profundo de dispositivos y puertos en toda la subred. Mantiene la conexión viva mediante Server-Sent Events (SSE).
