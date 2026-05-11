@@ -1,70 +1,87 @@
 # 📡 NetPulse Audit Stack
 > **Plataforma Full-Stack de Auditoría de Red y Ciberseguridad Defensiva.**
 
-NetPulse es una solución profesional diseñada para la visibilidad total de infraestructuras de red locales. Utiliza una arquitectura de microservicios contenerizada para ofrecer escaneo táctico de puertos, descubrimiento de dispositivos en tiempo real y análisis de topología interactivo.
+NetPulse es una solución profesional diseñada para la visibilidad total de infraestructuras de red locales. Utiliza una arquitectura de microservicios contenerizada para ofrecer escaneo táctico de puertos, descubrimiento de dispositivos en tiempo real y análisis de topología interactivo con detección de intrusos.
 
 ---
 
-## 🚀 Funcionalidades Destacadas
+## 🏗️ Arquitectura del Sistema
+El proyecto está construido sobre una infraestructura robusta de microservicios, diseñada para escalabilidad y aislamiento.
 
-### 🛡️ Rogue Device Detection
-NetPulse incluye inteligencia comparativa. El sistema detecta automáticamente si un dispositivo es nuevo en la red comparándolo con escaneos históricos, resaltando posibles intrusos con alertas visuales dinámicas.
-
-### 🕸️ Mapa de Topología Interactivo
-Visualización de nodos basada en **ReactFlow**. Permite ver el Gateway y los dispositivos orbitando con conexiones animadas, permitiendo una comprensión inmediata de la jerarquía de la infraestructura.
-
-### ⚡ Streaming de Datos con SSE
-Descubrimiento de red ultra-rápido mediante **Server-Sent Events (SSE)**. Los dispositivos y sus puertos abiertos aparecen en el dashboard al instante conforme son detectados por el motor táctico.
+<p align="center">
+  <img src="docs/images/architecture.png" width="850" alt="Technical Architecture">
+</p>
 
 ---
 
-## 📸 Vista Previa
+## 📸 Galería de Funcionalidades
 
-### 1. Mapa de Topología Interactiva
-Visualiza la infraestructura de red de forma gráfica. Arrastra nodos, haz zoom y analiza las conexiones en tiempo real.
+### 🕸️ 1. Topología de Red Dinámica
+Visualización interactiva basada en **ReactFlow**. Permite identificar jerarquías y conexiones entre el Gateway y los dispositivos detectados de forma gráfica.
 
-<img src="docs/images/topologia.png" width="100%" alt="NetPulse Topology Map">
+<p align="center">
+  <img src="docs/images/topologia.png" width="100%" alt="NetPulse Topology Map">
+</p>
 
-### 2. Detección de Intrusos (Rogue Devices)
-Identifica instantáneamente cambios en la red. Los nuevos dispositivos se resaltan en rojo con alertas visuales y badges de seguridad.
+### 🛡️ 2. Detección de Rogue Devices
+Inteligencia de red que compara escaneos históricos para detectar automáticamente nuevos dispositivos, alertando visualmente sobre posibles intrusos.
 
-<img src="docs/images/topologia2.png" width="100%" alt="NetPulse Security Alerts">
+<p align="center">
+  <img src="docs/images/topologia2.png" width="100%" alt="Security Alerts">
+</p>
 
----
+### 📊 3. Gestión de Dispositivos y Servicios
+Análisis detallado de puertos abiertos, servicios y fingerprinting de dispositivos (S.O., Fabricante, etc.).
 
-## 🏗️ Arquitectura Técnica
+<p align="center">
+  <img src="docs/images/devices.png" width="100%" alt="Device Management">
+</p>
 
-NetPulse se divide en cuatro servicios core totalmente aislados y orquestados mediante **Docker Compose**:
+### 📜 4. Historial de Auditoría
+Control total sobre los escaneos realizados, permitiendo volver atrás en el tiempo para comparar el estado de la red.
 
-1.  **Scanner API (Python 3.11 / FastAPI):** Motor táctico basado en `Nmap` y `Scapy`.
-2.  **Core Backend (Next.js 16+ / App Router):** Orquestador de APIs y persistencia relacional.
-3.  **Real-Time Frontend (React / Vite):** Dashboard reactivo con **Tailwind CSS v4** y `ReactFlow`.
-4.  **Database (PostgreSQL):** Almacenamiento persistente de dispositivos y trazas históricas.
+<p align="center">
+  <img src="docs/images/scans.png" width="100%" alt="Scan History">
+</p>
+
+### 🌓 5. Interfaz Premium (Dark/Light Mode)
+Diseño moderno y adaptable que garantiza la mejor experiencia de usuario en cualquier entorno de trabajo.
+
+<p align="center">
+  <img src="docs/images/theme.png" width="100%" alt="Theme Support">
+</p>
+
+### ✨ 6. Características Core
+Resumen de las capacidades tácticas del motor de escaneo.
+
+<p align="center">
+  <img src="docs/images/caracter.png" width="100%" alt="Core Features">
+</p>
 
 ---
 
 ## 🧪 Calidad de Software y CI/CD
 
-El proyecto mantiene un estándar de calidad riguroso mediante una pipeline de **Integración Continua (CI)** local:
+El proyecto cuenta con una pipeline de **Integración Continua (CI)** local que valida cada commit:
 
 *   **Scanner:** 31 tests unitarios (Pytest) + Validación de estilo (Flake8).
 *   **Backend:** 34 tests unitarios (Vitest) + TypeScript Check + ESLint.
 *   **Frontend:** 34 tests unitarios (Vitest) + TypeScript Check + ESLint.
 
-Para validar el proyecto completo:
+Para validar el stack completo:
 ```bash
 make ci
 ```
 
 ---
 
-## 🚦 Instalación Rápida
+## 🚦 Guía de Inicio Rápido
 
-1. Clonar: `git clone https://github.com/JoseAndres20/NetPulse.git`
-2. Configurar: `cp .env.example .env`
-3. Lanzar: `make up`
+1. **Clonar:** `git clone https://github.com/JoseAndres20/NetPulse.git`
+2. **Configurar:** `cp .env.example .env`
+3. **Levantar:** `make up`
 
 ---
 
 ## 🛡️ Licencia
-Distribuido bajo la Licencia MIT.
+Distribuido bajo la Licencia MIT. Ver `LICENSE` para más información.
