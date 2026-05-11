@@ -1,6 +1,6 @@
 # 📡 NetPulse Audit Stack
 
-**NetPulse Audit Stack** es una plataforma profesional de monitoreo y descubrimiento de redes locales en tiempo real. Diseñada bajo una arquitectura de microservicios contenida en Docker, permite identificar dispositivos, auditar puertos y visualizar el estado de la red de forma eficiente y segura.
+Plataforma profesional de descubrimiento de red y auditoría de dispositivos en tiempo real, diseñada bajo una arquitectura de microservicios contenerizada.
 
 ## 📸 Preview
 
@@ -19,6 +19,11 @@
 
 ![Scan History — Light Mode](docs/images/theme.png)
 
+### Network Topology — Interactive Map
+> Visualiza la infraestructura de red de forma gráfica. Arrastra nodos, haz zoom y analiza las conexiones entre el Gateway y los dispositivos detectados.
+
+![Network Topology — Interactive Map](docs/images/topology.png)
+
 ---
 
 ## 🏗️ Arquitectura del Sistema
@@ -26,10 +31,20 @@
 ![NetPulse Architecture Diagram](docs/images/architecture.png)
 
 ### Componentes:
-1.  **Scanner (Python/FastAPI):** El motor táctico. Utiliza `Nmap` con ejecución asíncrona (`asyncio`) y privilegios de red (`host mode`) para el descubrimiento profundo de dispositivos y puertos en toda la subred. Mantiene la conexión viva mediante Server-Sent Events (SSE).
+1.  **Scanner (Python/FastAPI):** El motor táctico. Utiliza `Nmap` con ejecución asíncrona (`asyncio`) y privilegios de red (`host mode`) para el descubrimiento profundo de dispositivos y puertos en toda la subred.
 2.  **Backend (Next.js 16+):** El orquestador de APIs. Gestiona la lógica de negocio, las rutas de red y las consultas de alto rendimiento a la base de datos usando SQL puro mediante el driver `pg`.
-3.  **Frontend (React/Vite):** El dashboard visual. Una interfaz moderna y reactiva que utiliza Context API (`ScanContext`) para mantener los escaneos en segundo plano de manera global en toda la app.
-4.  **Database (PostgreSQL):** Almacenamiento persistente relacional de dispositivos, puertos, y la traza histórica exacta de escaneos a través de tablas intermedias (`scan_devices`).
+3.  **Frontend (React/Vite):** El dashboard visual. Una interfaz moderna y reactiva que utiliza **ReactFlow** para la topología y Context API para el estado global.
+4.  **Database (PostgreSQL):** Almacenamiento persistente relacional de dispositivos, puertos, y la traza histórica exacta de escaneos.
+
+---
+
+## 🚀 Características Principales
+
+- **Streaming en Vivo:** Resultados instantáneos mediante Server-Sent Events (SSE).
+- **Mapa de Topología:** Visualización interactiva de nodos y conexiones (ReactFlow).
+- **Historial Relacional:** Traza completa de escaneos y dispositivos en PostgreSQL.
+- **Arquitectura de Microservicios:** Separación clara entre Scanner, Backend y Frontend.
+- **CI/CD Local:** Validación automatizada de tipos, linting y tests unitarios.
 
 ---
 
@@ -38,56 +53,46 @@
 | Componente | Tecnología |
 | :--- | :--- |
 | **Scanner** | Docker, Python 3.11, FastAPI, Nmap, asyncio |
-| **Backend** | Docker, Node.js, Next.js (App Router API), TypeScript, pg (node-postgres) |
-| **Frontend** | Docker, React 19, Vite, Tailwind CSS v4, Lucide React, Context API |
+| **Backend** | Docker, Node.js, Next.js (App Router API), TypeScript, pg |
+| **Frontend** | React 19, Vite, Tailwind CSS v4, **ReactFlow**, Lucide React |
 | **Infraestructura** | Docker Compose, Makefile, CI/CD Local (`make ci`) |
 | **Base de Datos** | Docker, PostgreSQL 15 (Alpine) |
 
 ---
 
-## 🚀 Inicio Rápido
+## 🚦 Guía de Inicio Rápido
 
-Este proyecto está optimizado para ejecutarse con un solo comando gracias al `Makefile` incluido.
+### Prerrequisitos
+- Docker & Docker Compose
+- Nmap instalado en el host (opcional, el contenedor lo incluye)
+- Permisos de red (el scanner usa `network_mode: host`)
 
-### Requisitos:
-*   Docker y Docker Compose instalados.
-*   Linux (recomendado para el modo `host` del scanner).
+### Instalación
+1. Clonar el repositorio:
+   ```bash
+   git clone https://github.com/JoseAndres20/NetPulse.git
+   cd NetPulse
+   ```
+2. Configurar variables de entorno:
+   ```bash
+   cp .env.example .env
+   # Edita .env con tus credenciales
+   ```
+3. Levantar los servicios:
+   ```bash
+   make up
+   ```
+4. Acceder al dashboard:
+   - Frontend: [http://localhost](http://localhost)
+   - Backend API: [http://localhost:3001](http://localhost:3001)
 
-### Instalación:
-
-1.  **Clona el repositorio:**
-    ```bash
-    git clone https://github.com/tu-usuario/netpulse-audit.git
-    cd netpulse-audit
-    ```
-
-2.  **Levanta el stack completo:**
-    ```bash
-    make restart
-    ```
-
-3.  **Verifica los servicios:**
-    ```bash
-    make urls
-    ```
-
----
-
-## 📖 Comandos Disponibles (Makefile)
-
-*   `make up`: Inicia los contenedores en segundo plano.
-*   `make down`: Detiene y elimina los contenedores.
-*   `make restart`: Reconstruye las imágenes y reinicia el sistema.
-*   `make logs`: Visualiza los logs de todos los servicios en tiempo real.
-*   `make ci`: Ejecuta el pipeline de Integración Continua local (TypeScript, ESLint, Flake8).
-*   `make urls`: Muestra las direcciones de acceso de cada servicio.
-
-## 🛡️ Infraestructura y Aislamiento
-
-La arquitectura de NetPulse Audit Stack se basa en el principio de **aislamiento por responsabilidad**:
-
-*   **Host Networking**: El servicio `scanner` utiliza acceso directo a la pila de red del host para capturar tráfico ARP y realizar descubrimientos sin las capas de abstracción de Docker.
-*   **Aislamiento de Aplicación**: El Backend y Frontend operan en una red virtual privada (`bridge mode`), exponiendo únicamente los puertos necesarios y protegiendo la base de datos de accesos externos directos.
-*   **Capacidades Reducidas**: Se implementan las capacidades de Linux `NET_ADMIN` y `NET_RAW` para permitir al scanner operar a bajo nivel sin necesidad de privilegios de root completos, siguiendo el principio de mínimo privilegio.
+### CI/CD Local
+Para asegurar la calidad del código antes de un commit, ejecuta:
+```bash
+make ci
+```
 
 ---
+
+## 🛡️ Licencia
+Distribuido bajo la Licencia MIT. Ver `LICENSE` para más información.
