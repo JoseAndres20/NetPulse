@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Monitor, Radar, ChevronLeft, ChevronRight, Activity, X } from 'lucide-react'
+import { Monitor, Radar, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 
 interface SidebarProps {
@@ -36,7 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <Activity size={28} color="var(--primary)" />
+            <Radar size={28} color="var(--primary)" />
             <span>NetPulse</span>
           </div>
           <button className="btn-icon desktop-only" onClick={() => setCollapsed(!collapsed)}>
