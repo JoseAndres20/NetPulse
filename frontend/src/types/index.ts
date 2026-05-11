@@ -14,3 +14,11 @@ export interface Device {
   status: string
   ports?: Port[]
 }
+
+export interface Scan {
+  id: string
+  target: string
+  startedAt: string
+  status: 'pending' | 'running' | 'completed' | 'failed'
+  devicesFound: number
+}

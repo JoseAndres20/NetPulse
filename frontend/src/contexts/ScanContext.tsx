@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import type { Device } from '../types'
 
 interface ScanContextType {
   devices: Device[]
   isScanning: boolean
   error: string | null
-  startScan: (scanType?: 'ping' | 'full') => void
+  startScan: (scanType?: 'ping' | 'full', target?: string) => void
   stopScan: () => void
 }
 
@@ -17,6 +17,14 @@ export const ScanProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null)
   const [eventSource, setEventSource] = useState<EventSource | null>(null)
 
+  useEffect(() => {
+    return () => {
+      if (eventSource) {
+        eventSource.close()
+      }
+    }
+  }, [eventSource])
+
   const stopScan = useCallback(() => {
     if (eventSource) {
       eventSource.close()
@@ -25,21 +33,28 @@ export const ScanProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsScanning(false)
   }, [eventSource])
 
-  const startScan = useCallback((scanType: 'ping' | 'full' = 'full') => {
-    // Prevent multiple concurrent scans
+  const startScan = useCallback((scanType: 'ping' | 'full' = 'full', target?: string) => {
     if (isScanning) return
+
+    if (eventSource) {
+      eventSource.close()
+    }
 
     setIsScanning(true)
     setDevices([])
     setError(null)
 
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-    const source = new EventSource(`${apiUrl}/api/scans/stream?scan_type=${scanType}`)
+    const url = target 
+      ? `${apiUrl}/api/scans/stream?scan_type=${scanType}&target=${encodeURIComponent(target)}`
+      : `${apiUrl}/api/scans/stream?scan_type=${scanType}`
+    const source = new EventSource(url)
     setEventSource(source)
 
     source.onmessage = (event) => {
       if (event.data === '[DONE]') {
-        source.close() // Cerrar explícitamente en memoria
+        source.close()
+        setEventSource(null)
         setIsScanning(false)
         return
       }
@@ -47,7 +62,12 @@ export const ScanProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const newDevice: Device = JSON.parse(event.data)
         setDevices(prev => {
-          if (prev.find(d => d.ip === newDevice.ip)) return prev
+          const index = prev.findIndex(d => d.ip === newDevice.ip)
+          if (index !== -1) {
+            const updated = [...prev]
+            updated[index] = newDevice
+            return updated
+          }
           return [newDevice, ...prev]
         })
       } catch (err) {
@@ -56,11 +76,12 @@ export const ScanProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     source.onerror = () => {
-      source.close() // Cerrar explícitamente en caso de error real
+      source.close()
+      setEventSource(null)
       setIsScanning(false)
-      setError('Connection to scanner lost or server is unreachable.')
+      setError('Connection lost or scanner unreachable.')
     }
-  }, [isScanning])
+  }, [isScanning, eventSource])
 
   return (
     <ScanContext.Provider value={{ devices, isScanning, error, startScan, stopScan }}>
