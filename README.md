@@ -24,6 +24,8 @@ Plataforma profesional de descubrimiento de red y auditoría de dispositivos en 
 
 ![Network Topology — Interactive Map](docs/images/topology.png)
 
+![Network Topology — Complex View](docs/images/topology2.png)
+
 ---
 
 ## 🏗️ Arquitectura del Sistema
