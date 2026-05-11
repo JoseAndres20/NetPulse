@@ -9,11 +9,10 @@ urls:
 	@echo " "
 	@echo "🚀 NetPulse Audit Stack - Accesos Rápidos"
 	@echo "----------------------------------------"
-	@echo "🌐 Frontend:    http://localhost:5173"
-	@echo "⚙️  Backend:     http://localhost:3001"
+	@echo "🌐 Frontend:    http://localhost:80"
+	@echo "⚙️  Backend:     http://localhost:3000"
 	@echo "🐍 Scanner API: http://localhost:$(SCANNER_PORT)"
 	@echo "📑 API Docs:    http://localhost:$(SCANNER_PORT)/docs"
-	@echo "🗄️  Base datos:  postgresql://$(POSTGRES_USER):***@localhost:5432/$(POSTGRES_DB)"
 	@echo "----------------------------------------"
 	@echo " "
 
@@ -66,6 +65,13 @@ shell-db:
 
 db-shell:
 	docker compose exec db psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
+
+# Ejecuta los tests de backend y frontend
+test:
+	@echo "--- 🧪 Corriendo Tests de Backend ---"
+	cd backend && npm test
+	@echo "--- 🧪 Corriendo Tests de Frontend ---"
+	cd frontend && npm test
 
 # Ejecuta el CI localmente
 .PHONY: ci

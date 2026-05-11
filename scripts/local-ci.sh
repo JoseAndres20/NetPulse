@@ -29,6 +29,10 @@ check_status "Backend TypeScript"
 echo "Ejecutando ESLint..."
 npx eslint src --ext .ts,.tsx --max-warnings 0
 check_status "Backend ESLint"
+
+echo "Ejecutando Tests Unitarios..."
+npm test
+check_status "Backend Unit Tests"
 cd ..
 
 # 2. Frontend CI
@@ -41,6 +45,10 @@ check_status "Frontend TypeScript"
 echo "Ejecutando ESLint..."
 npx eslint src --ext .ts,.tsx --max-warnings 0
 check_status "Frontend ESLint"
+
+echo "Ejecutando Tests Unitarios..."
+npm test
+check_status "Frontend Unit Tests"
 cd ..
 
 # 3. Scanner CI
