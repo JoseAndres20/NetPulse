@@ -11,17 +11,17 @@ El proyecto se divide en 4 contenedores especializados que colaboran entre sí:
 ```mermaid
 graph TD
     User((Usuario)) --> |Accede| Frontend[Frontend - React/Vite]
-    Frontend --> |Consulta API| Backend[Backend - Next.js]
-    Backend --> |Orquestación| Scanner[Scanner - Python/Scapy]
-    Backend --> |Persistencia| DB[(PostgreSQL)]
-    Scanner --> |Sniffing/ARP| LAN((Red Local))
+    Frontend --> |Server-Sent Events| Backend[Backend - Next.js]
+    Backend --> |Orquestación Asíncrona| Scanner[Scanner - Python/FastAPI]
+    Backend --> |Persistencia Relacional| DB[(PostgreSQL)]
+    Scanner --> |Nmap Subnet Scan| LAN((Red Local))
 ```
 
 ### Componentes:
-1.  **Scanner (Python/FastAPI):** El motor táctico. Utiliza `Scapy` y `Nmap` con privilegios de red (`host mode`) para el descubrimiento profundo de dispositivos.
-2.  **Backend (Next.js 14):** El orquestador. Gestiona la lógica de negocio, las APIs y la comunicación con la base de datos mediante Prisma ORM.
-3.  **Frontend (React/Vite):** El dashboard visual. Una interfaz moderna y reactiva para visualizar mapas de red y tablas de dispositivos.
-4.  **Database (PostgreSQL):** Almacenamiento persistente de dispositivos, historial de escaneos y estados.
+1.  **Scanner (Python/FastAPI):** El motor táctico. Utiliza `Nmap` con ejecución asíncrona (`asyncio`) y privilegios de red (`host mode`) para el descubrimiento profundo de dispositivos y puertos en toda la subred. Mantiene la conexión viva mediante Server-Sent Events (SSE).
+2.  **Backend (Next.js 16+):** El orquestador de APIs. Gestiona la lógica de negocio, las rutas de red y las consultas de alto rendimiento a la base de datos usando SQL puro mediante el driver `pg`.
+3.  **Frontend (React/Vite):** El dashboard visual. Una interfaz moderna y reactiva que utiliza Context API (`ScanContext`) para mantener los escaneos en segundo plano de manera global en toda la app.
+4.  **Database (PostgreSQL):** Almacenamiento persistente relacional de dispositivos, puertos, y la traza histórica exacta de escaneos a través de tablas intermedias (`scan_devices`).
 
 ---
 
@@ -29,10 +29,10 @@ graph TD
 
 | Componente | Tecnología |
 | :--- | :--- |
-| **Scanner** | Docker, Python 3.11, FastAPI, Scapy, Nmap |
-| **Backend** | Docker, Next.js (App Router), TypeScript, Prisma ORM |
-| **Frontend** | Docker, React, Vite, Tailwind CSS |
-| **Infraestructura** | Docker Compose, Makefile, Host Networking |
+| **Scanner** | Docker, Python 3.11, FastAPI, Nmap, asyncio |
+| **Backend** | Docker, Node.js, Next.js (App Router API), TypeScript, pg (node-postgres) |
+| **Frontend** | Docker, React 19, Vite, Tailwind CSS v4, Lucide React, Context API |
+| **Infraestructura** | Docker Compose, Makefile, CI/CD Local (`make ci`) |
 | **Base de Datos** | Docker, PostgreSQL 15 (Alpine) |
 
 ---
@@ -71,7 +71,7 @@ Este proyecto está optimizado para ejecutarse con un solo comando gracias al `M
 *   `make down`: Detiene y elimina los contenedores.
 *   `make restart`: Reconstruye las imágenes y reinicia el sistema.
 *   `make logs`: Visualiza los logs de todos los servicios en tiempo real.
-*   `make shell-scanner`: Acceso interactivo al contenedor de Python.
+*   `make ci`: Ejecuta el pipeline de Integración Continua local (TypeScript, ESLint, Flake8).
 *   `make urls`: Muestra las direcciones de acceso de cada servicio.
 
 ## 🛡️ Infraestructura y Aislamiento
