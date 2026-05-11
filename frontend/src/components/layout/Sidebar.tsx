@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Monitor, Radar, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { Monitor, Radar, ChevronLeft, ChevronRight, X, Share2 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 
 interface SidebarProps {
@@ -58,6 +58,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <NavLink to="/scans" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <Radar size={20} />
             <span>Scans</span>
+          </NavLink>
+
+          <NavLink to="/topology" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <Share2 size={20} />
+            <span>Topology</span>
           </NavLink>
         </nav>
       </aside>
