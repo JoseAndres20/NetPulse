@@ -95,7 +95,8 @@ describe('ScanTable', () => {
     
     expect(screen.getByText('Date / Time')).toBeDefined()
     expect(screen.getByText('Target')).toBeDefined()
-    expect(screen.getByText('Devices Found')).toBeDefined()
+    expect(screen.getByText('Devices')).toBeDefined()
+    expect(screen.getByText('Alerts')).toBeDefined()
     expect(screen.getByText('Status')).toBeDefined()
   })
 })

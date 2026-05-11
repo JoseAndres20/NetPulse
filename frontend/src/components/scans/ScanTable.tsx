@@ -43,17 +43,18 @@ const styles = {
 interface ScanTableProps {
   scans: Scan[]
   onScanClick: (scan: Scan) => void
-  onDeleteClick: (scan: Scan) => void
+  onDeleteClick?: (scan: Scan) => void
 }
 
-const TableHeader: React.FC = () => (
+const TableHeader: React.FC<{ showActions?: boolean }> = ({ showActions }) => (
   <thead>
     <tr>
       <th>Date / Time</th>
       <th>Target</th>
-      <th>Devices Found</th>
+      <th>Devices</th>
+      <th>Alerts</th>
       <th>Status</th>
-      <th style={styles.actionColumnHeader} />
+      {showActions && <th style={styles.actionColumnHeader} />}
     </tr>
   </thead>
 )
@@ -61,6 +62,7 @@ const TableHeader: React.FC = () => (
 /** Displays the paginated list of scan history records. */
 export const ScanTable: React.FC<ScanTableProps> = ({ scans, onScanClick, onDeleteClick }) => {
   const [currentPage, setCurrentPage] = useState(1)
+  const showActions = !!onDeleteClick
 
   const totalPages = Math.ceil(scans.length / ITEMS_PER_PAGE)
   const currentScans = scans.slice(
@@ -72,10 +74,10 @@ export const ScanTable: React.FC<ScanTableProps> = ({ scans, onScanClick, onDele
     return (
       <div className="table-container">
         <table>
-          <TableHeader />
+          <TableHeader showActions={showActions} />
           <tbody>
             <tr>
-              <td colSpan={5} style={styles.emptyCell}>
+              <td colSpan={showActions ? 5 : 4} style={styles.emptyCell}>
                 No scan history found.
               </td>
             </tr>
@@ -88,7 +90,7 @@ export const ScanTable: React.FC<ScanTableProps> = ({ scans, onScanClick, onDele
   return (
     <div className="table-container">
       <table>
-        <TableHeader />
+        <TableHeader showActions={showActions} />
         <tbody>
           {currentScans.map((scan) => (
             <tr
@@ -103,17 +105,28 @@ export const ScanTable: React.FC<ScanTableProps> = ({ scans, onScanClick, onDele
               <td style={styles.targetCell}>{scan.target}</td>
               <td style={styles.countCell}>{scan.devicesFound}</td>
               <td>
-                <Badge status={scan.status} isOnline={scan.status === 'completed'} />
+                {scan.alertsFound && scan.alertsFound > 0 ? (
+                  <span style={{ color: '#ef4444', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    ⚠️ {scan.alertsFound}
+                  </span>
+                ) : (
+                  <span style={{ color: 'var(--text-dim)', opacity: 0.5 }}>0</span>
+                )}
               </td>
               <td>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDeleteClick(scan) }}
-                  style={styles.deleteButton}
-                  title="Delete scan"
-                >
-                  <Trash2 size={16} />
-                </button>
+                <Badge status={scan.status} isOnline={scan.status === 'completed'} />
               </td>
+              {showActions && (
+                <td>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDeleteClick(scan) }}
+                    style={styles.deleteButton}
+                    title="Delete scan"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

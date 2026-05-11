@@ -52,6 +52,20 @@ export const scansService = {
 
     const scanRecord = await scansRepository.create(target || 'auto-detected', scanType)
     const foundIps = new Set<string>()
+    let alertsFound = 0
+
+    // Get previous scan for comparison during stream
+    const previousScan = await scansRepository.findPreviousScan(target || 'auto-detected', scanRecord.id)
+    const previousMacs = new Set<string>()
+    const previousIps = new Set<string>()
+
+    if (previousScan) {
+      const prevDevices = (await scansRepository.getDevicesByScan(previousScan.id)) as Device[]
+      prevDevices.forEach((d: Device) => {
+        if (d.mac) previousMacs.add(d.mac)
+        previousIps.add(d.ip)
+      })
+    }
 
     const reader = response.body?.getReader()
     const encoder = new TextEncoder()
@@ -80,8 +94,8 @@ export const scansService = {
 
               if (dataStr === '[DONE]') {
                 try {
-                  await scansRepository.updateStatus(scanRecord.id, 'completed', foundIps.size)
-                  logger.info('Scan completed', { scanId: scanRecord.id, devicesFound: foundIps.size })
+                  await scansRepository.updateStatus(scanRecord.id, 'completed', foundIps.size, alertsFound)
+                  logger.info('Scan completed', { scanId: scanRecord.id, devicesFound: foundIps.size, alertsFound })
                 } catch (error) {
                   logger.error('Failed to finalize scan', { scanId: scanRecord.id, error: String(error) })
                 }
@@ -93,6 +107,16 @@ export const scansService = {
                 const deviceData = JSON.parse(dataStr) as Record<string, unknown>
 
                 if (deviceData.ip) foundIps.add(String(deviceData.ip))
+
+                // Check if device is new for the live stream event
+                const isNew = deviceData.mac 
+                  ? !previousMacs.has(String(deviceData.mac)) 
+                  : !previousIps.has(String(deviceData.ip))
+                
+                if (isNew && previousScan) {
+                  alertsFound++
+                  deviceData.is_new = true
+                }
 
                 processDevice(deviceData, scanRecord.id).catch((error) =>
                   logger.error('Background persistence failed', { ip: deviceData.ip, error: String(error) })
@@ -106,7 +130,7 @@ export const scansService = {
           }
         } catch (error) {
           logger.error('Stream read error', { scanId: scanRecord.id, error: String(error) })
-          await scansRepository.updateStatus(scanRecord.id, 'failed', foundIps.size)
+          await scansRepository.updateStatus(scanRecord.id, 'failed', foundIps.size, alertsFound)
         } finally {
           controller.close()
         }

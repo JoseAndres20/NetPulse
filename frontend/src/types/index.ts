@@ -24,4 +24,7 @@ export interface Scan {
   startedAt: string
   status: 'pending' | 'running' | 'completed' | 'failed'
   devicesFound: number
+  alertsFound?: number
+  finishedAt?: string
+  errorMsg?: string
 }

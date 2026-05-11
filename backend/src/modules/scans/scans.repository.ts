@@ -12,10 +12,10 @@ export const scansRepository = {
   },
 
   // Update the status of a scan
-  updateStatus: async (id: string, status: Scan['status'], devicesFound: number): Promise<void> => {
+  updateStatus: async (id: string, status: Scan['status'], devicesFound: number, alertsFound: number = 0): Promise<void> => {
     await pool.query(
-      'UPDATE scans SET status = $1, devices_found = $2, finished_at = NOW() WHERE id = $3',
-      [status, devicesFound, id]
+      'UPDATE scans SET status = $1, devices_found = $2, alerts_found = $3, finished_at = NOW() WHERE id = $4',
+      [status, devicesFound, alertsFound, id]
     )
   },
 
@@ -29,6 +29,7 @@ export const scansRepository = {
       scanType: row.scan_type,
       status: row.status,
       devicesFound: row.devices_found,
+      alertsFound: row.alerts_found,
       startedAt: row.started_at,
       finishedAt: row.finished_at,
       errorMsg: row.error_msg
@@ -60,6 +61,7 @@ export const scansRepository = {
       scanType: row.scan_type,
       status: row.status,
       devicesFound: row.devices_found,
+      alertsFound: row.alerts_found,
       startedAt: row.started_at,
       finishedAt: row.finished_at,
       errorMsg: row.error_msg

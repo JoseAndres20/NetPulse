@@ -70,8 +70,8 @@ export const ScanProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           return [newDevice, ...prev]
         })
-      } catch (err) {
-        console.error('Error parsing device data:', err)
+      } catch {
+        // Ignore parse errors for non-device messages
       }
     }
 

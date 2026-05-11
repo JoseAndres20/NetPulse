@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS scans (
     status        VARCHAR(20)  NOT NULL DEFAULT 'pending'
                   CHECK (status IN ('pending', 'running', 'completed', 'failed')),
     devices_found INT          NOT NULL DEFAULT 0,
+    alerts_found  INT          NOT NULL DEFAULT 0,
     started_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     finished_at   TIMESTAMPTZ,
     error_msg     TEXT
