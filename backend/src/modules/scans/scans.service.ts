@@ -1,19 +1,56 @@
 import { scansRepository } from './scans.repository'
 import { devicesService } from '../devices/devices.service'
 import { portsService } from '../ports/ports.service'
+import { logger } from '@/lib/logger'
+
+const SCANNER_BASE_URL = process.env.SCANNER_URL || 'http://localhost:8000'
+
+/**
+ * Persists a discovered device and its open ports to the database,
+ * linking it to the active scan record.
+ */
+async function processDevice(
+  deviceData: Record<string, unknown>,
+  scanId: string
+): Promise<void> {
+  try {
+    const device = await devicesService.upsertFromScan({
+      ip: String(deviceData.ip),
+      mac: deviceData.mac ? String(deviceData.mac) : undefined,
+      hostname: deviceData.hostname ? String(deviceData.hostname) : undefined,
+      vendor: deviceData.vendor ? String(deviceData.vendor) : undefined,
+      os: deviceData.os ? String(deviceData.os) : undefined,
+      status: deviceData.status
+        ? (String(deviceData.status) as 'online' | 'offline' | 'unknown')
+        : 'online',
+      is_gateway: typeof deviceData.is_gateway === 'boolean' ? deviceData.is_gateway : false,
+    })
+
+    await scansRepository.linkDeviceToScan(scanId, device.id)
+
+    if (Array.isArray(deviceData.ports) && deviceData.ports.length > 0) {
+      await portsService.upsertDevicePorts(device.id, scanId, deviceData.ports)
+    }
+  } catch (error) {
+    logger.error('Failed to persist device', { ip: deviceData.ip, error: String(error) })
+  }
+}
 
 export const scansService = {
+  /**
+   * Opens an SSE stream from the scanner service, proxies events to the client,
+   * and asynchronously persists all discovered devices to the database.
+   */
   startStream: async (target: string | null, scanType: string = 'ping') => {
-    const scannerUrl = new URL(`${process.env.SCANNER_URL || 'http://localhost:8000'}/scan/stream`)
+    const scannerUrl = new URL(`${SCANNER_BASE_URL}/scan/stream`)
     if (target) scannerUrl.searchParams.append('target', target)
     scannerUrl.searchParams.append('scan_type', scanType)
 
     const response = await fetch(scannerUrl.toString())
     if (!response.ok) throw new Error('Scanner service unreachable')
 
-    // Registrar inicio del escaneo en DB
-    const scanRecord = await scansRepository.create(target || 'auto-detected')
-    let foundCount = 0
+    const scanRecord = await scansRepository.create(target || 'auto-detected', scanType)
+    const foundIps = new Set<string>()
 
     const reader = response.body?.getReader()
     const encoder = new TextEncoder()
@@ -28,48 +65,47 @@ export const scansService = {
             const { done, value } = await reader.read()
             if (done) break
 
-            const chunk = decoder.decode(value)
-            const lines = chunk.split('\n')
+            const lines = decoder.decode(value).split('\n')
 
             for (const line of lines) {
               if (line.startsWith(':')) {
-                // Reenviar keepalives o comentarios al frontend para evitar timeout
                 controller.enqueue(encoder.encode(`${line}\n\n`))
                 continue
               }
 
-              if (line.startsWith('data: ')) {
-                const dataStr = line.replace('data: ', '').trim()
+              if (!line.startsWith('data: ')) continue
 
-                if (dataStr === '[DONE]') {
-                  // Finalizar registro en DB
-                  await scansRepository.updateStatus(scanRecord.id, 'completed', foundCount)
-                  controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-                  continue
-                }
+              const dataStr = line.replace('data: ', '').trim()
 
+              if (dataStr === '[DONE]') {
                 try {
-                  const deviceData = JSON.parse(dataStr)
-                  foundCount++
+                  await scansRepository.updateStatus(scanRecord.id, 'completed', foundIps.size)
+                  logger.info('Scan completed', { scanId: scanRecord.id, devicesFound: foundIps.size })
+                } catch (error) {
+                  logger.error('Failed to finalize scan', { scanId: scanRecord.id, error: String(error) })
+                }
+                controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+                continue
+              }
 
-                  // Persistir dispositivo
-                  devicesService.upsertFromScan(deviceData)
-                    .then(async (device) => {
-                      await scansRepository.linkDeviceToScan(scanRecord.id, device.id)
-                      if (deviceData.ports && deviceData.ports.length > 0) {
-                        await portsService.upsertDevicePorts(device.id, scanRecord.id, deviceData.ports)
-                      }
-                    })
-                    .catch(() => { })
+              try {
+                const deviceData = JSON.parse(dataStr) as Record<string, unknown>
 
-                  // Enviar al stream
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(deviceData)}\n\n`))
-                } catch { }
+                if (deviceData.ip) foundIps.add(String(deviceData.ip))
+
+                processDevice(deviceData, scanRecord.id).catch((error) =>
+                  logger.error('Background persistence failed', { ip: deviceData.ip, error: String(error) })
+                )
+
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(deviceData)}\n\n`))
+              } catch (error) {
+                logger.warn('Failed to parse device payload', { error: String(error) })
               }
             }
           }
-        } catch {
-          await scansRepository.updateStatus(scanRecord.id, 'failed', foundCount)
+        } catch (error) {
+          logger.error('Stream read error', { scanId: scanRecord.id, error: String(error) })
+          await scansRepository.updateStatus(scanRecord.id, 'failed', foundIps.size)
         } finally {
           controller.close()
         }
@@ -77,7 +113,13 @@ export const scansService = {
     })
   },
 
+  /** Returns all historical scan records ordered by most recent. */
   getAllScans: async () => {
     return scansRepository.findAll()
+  },
+
+  /** Deletes a scan record and its associated device links by ID. */
+  deleteScan: async (id: string) => {
+    return scansRepository.delete(id)
   }
 }
