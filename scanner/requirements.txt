@@ -6,3 +6,6 @@ requests
 psycopg2-binary
 pydantic
 pydantic-settings
+pytest
+pytest-asyncio
+httpx

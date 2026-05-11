@@ -75,16 +75,16 @@ class NetworkScanner:
     @staticmethod
     def get_local_network() -> str:
         """Detects the local network CIDR by resolving the default outbound interface."""
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-            try:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
                 s.connect(("8.8.8.8", 80))
                 local_ip = s.getsockname()[0]
                 detected = ".".join(local_ip.split(".")[:-1]) + ".0/24"
                 logger.info(f"Auto-detected network: {detected}")
                 return detected
-            except Exception as e:
-                logger.error(f"Failed to detect local network: {e}")
-                return "127.0.0.1/32"
+        except Exception as e:
+            logger.error(f"Failed to detect local network: {e}")
+            return "127.0.0.1/32"
 
     async def _discover_hosts(self, network_range: str) -> list[str]:
         """Discovers all alive hosts in the network range using Nmap ping scan."""

@@ -72,6 +72,8 @@ test:
 	cd backend && npm test
 	@echo "--- 🧪 Corriendo Tests de Frontend ---"
 	cd frontend && npm test
+	@echo "--- 🧪 Corriendo Tests de Scanner ---"
+	cd scanner && pytest
 
 # Ejecuta el CI localmente
 .PHONY: ci

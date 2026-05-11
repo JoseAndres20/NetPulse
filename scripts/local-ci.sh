@@ -57,6 +57,10 @@ cd scanner
 echo "Ejecutando Flake8 (PEP8)..."
 flake8 . --max-line-length=120 --exclude=__pycache__ --extend-ignore=E501,W503,B008
 check_status "Scanner Flake8"
+
+echo "Ejecutando Tests Unitarios (pytest)..."
+PYTHONPATH=. pytest
+check_status "Scanner Unit Tests"
 cd ..
 
 # 4. Docker Config CI
